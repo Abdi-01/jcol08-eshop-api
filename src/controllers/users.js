@@ -71,7 +71,7 @@ module.exports = {
             delete results[0].password;
             if (check) {
                 console.log(results[0]);
-                let token = createToken({...results[0]});
+                let token = createToken({ ...results[0] });
                 return res.status(200).send({ ...results[0], token });
             } else {
                 return res.status(401).send({
@@ -89,8 +89,8 @@ module.exports = {
                 console.log(err);
                 return res.status(500).send(err);
             }
-            let token = createToken({...results[0]});
-            return res.status(200).send({...results[0], token});
+            let token = createToken({ ...results[0] });
+            return res.status(200).send({ ...results[0], token });
         })
     },
     update: (req, res) => {
@@ -98,5 +98,8 @@ module.exports = {
     },
     delete: (req, res) => {
 
+    },
+    profileImg: (req, res) => {
+        console.log(req.files);
     }
 }
