@@ -7,6 +7,7 @@ app.use(cors());
 app.use(bearerToken());
 
 app.use(express.json());
+app.use(express.static('src/public'));
 
 app.get('/', (req, res) => {
     res.status(200).send('<h1>ESHOP API</h1>');
