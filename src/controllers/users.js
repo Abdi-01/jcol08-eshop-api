@@ -101,5 +101,19 @@ module.exports = {
     },
     profileImg: (req, res) => {
         console.log(req.files);
+        // yang disimpan ke database : /imgProfile/filename
+        dbConf.query(`UPDATE users set profile=${dbConf.escape(`/imgProfile/${req.files[0].filename}`)}
+        where id=${dbConf.escape(req.decript.iduser)};`, (err, results) => {
+            if (err) {
+                return res.status(500).send({
+                    success:false,
+                    message:err
+                });
+            }
+            return res.status(200).send({
+                success:true,
+                message:'Upload success ✅'
+            });
+        })
     }
 }

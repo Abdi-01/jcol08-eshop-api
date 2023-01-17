@@ -17,5 +17,19 @@ module.exports = {
         })
 
         return token;
+    },
+    readToken: (req, res, next) => {
+        // pengecekan token
+        jwt.verify(req.token, 'eshop!', (err, decript) => {
+            if (err) {
+                return res.status(401).send({
+                    success: false,
+                    message: 'Authenticate token failed ⚠️'
+                })
+            }
+            console.log(decript);
+            req.decript = decript; // menampung data hasil terjemahan token
+            next();
+        })
     }
 }
