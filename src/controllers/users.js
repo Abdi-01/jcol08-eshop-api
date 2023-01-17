@@ -2,6 +2,7 @@ const { dbConf } = require("../config/db");
 const { hashPassword, createToken } = require("../config/encript");
 const UsersModel = require("../model/users");
 const bcrypt = require('bcrypt');
+const { transport } = require("../config/nodemailer");
 
 module.exports = {
     getData: async (req, res) => {
@@ -33,7 +34,6 @@ module.exports = {
                 console.log(err);
                 return res.status(500).send(err);
             }
-
             if (results.length > 0) {
                 // 2. Jika ada value yang didapatkan, maka kirim response untuk regis ulang
                 return res.status(200).send({
@@ -49,10 +49,30 @@ module.exports = {
                         return res.status(500).send(errInsert);
                     }
 
-                    res.status(201).send({
-                        success: true,
-                        message: 'Register your account success ✅'
+                    console.log(resultInsert);
+
+                    let token = createToken({ id: resultInsert.insertId, username, email });
+
+                    // Mengirimkan email dahulu
+                    transport.sendMail({
+                        from: 'ESHOP ADMIN',
+                        to: email,
+                        subject: 'Verification email account',
+                        html: `<div>
+                        <h3>Click link below for verification your email</h3>
+                        <a href="http://localhost:3000/verification?t=${token}">Verifie Now</a>
+                        </div>`
+                    }, (err, info) => {
+                        if (err) {
+                            return res.status(400).send(err);
+                        }
+                        return res.status(201).send({
+                            success: true,
+                            message: 'Register your account success ✅, check your email',
+                            info
+                        })
                     })
+
                 })
             }
         })
@@ -106,13 +126,13 @@ module.exports = {
         where id=${dbConf.escape(req.decript.iduser)};`, (err, results) => {
             if (err) {
                 return res.status(500).send({
-                    success:false,
-                    message:err
+                    success: false,
+                    message: err
                 });
             }
             return res.status(200).send({
-                success:true,
-                message:'Upload success ✅'
+                success: true,
+                message: 'Upload success ✅'
             });
         })
     }
