@@ -14,4 +14,6 @@ route.get('/keep', readToken, usersController.keepLogin);
 route.patch('/profile', readToken,
     uploader('/imgProfile', 'IMGPROFILE').array('images', 1),
     usersController.profileImg);
+
+route.patch('/verified', readToken, usersController.verifiedAccount)
 module.exports = route;

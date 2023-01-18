@@ -7,8 +7,16 @@ const { transport } = require("../config/nodemailer");
 module.exports = {
     getData: async (req, res) => {
         try {
-            let data = await UsersModel.findAll();
-            return res.status(200).send(data);
+            await client.connect();
+            let dataRedis = await client.get('allUser');
+            console.log(dataRedis);
+            if (dataRedis) {
+                res.status(200).send({ isCached: true, data: JSON.parse(dataRedis) });
+            } else {
+                let data = await UsersModel.findAll();
+                await client.set('allUser', JSON.stringify(data), 'EX', 120);
+                res.status(200).send(data);
+            }
         } catch (error) {
             console.log(error);
             return res.status(500).send(error);
@@ -133,6 +141,22 @@ module.exports = {
             return res.status(200).send({
                 success: true,
                 message: 'Upload success ✅'
+            });
+        })
+    },
+    verifiedAccount: (req, res) => {
+        // Digunakan untuk merubah status akun, yang awalnya unverified menjadi verified
+        console.log(req.decript);
+        dbConf.query(`UPDATE users set status="verified" where id=${dbConf.escape(req.decript.id)};`,(err,results)=>{
+            if (err) {
+                return res.status(500).send({
+                    success: false,
+                    message: err
+                });
+            }
+            return res.status(200).send({
+                success: true,
+                message: 'Your account verified ✅'
             });
         })
     }
