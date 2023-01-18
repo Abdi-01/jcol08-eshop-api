@@ -87,7 +87,7 @@ module.exports = {
     },
     login: (req, res) => {
         console.log(req.body);
-        dbConf.query(`Select id as iduser, username, email, phone, password, role, status, address 
+        dbConf.query(`Select id as iduser, username, email, phone, password, role, status, address, profile 
         from users where email=${dbConf.escape(req.body.email)};`, (err, results) => {
             if (err) {
                 console.log(err);
@@ -111,7 +111,7 @@ module.exports = {
     },
     keepLogin: (req, res) => {
         console.log(req.decript);
-        dbConf.query(`Select id as iduser, username, email, phone, password, role, status, address 
+        dbConf.query(`Select id as iduser, username, email, phone, password, role, status, address, profile 
         from users where id=${dbConf.escape(req.decript.iduser)};`, (err, results) => {
             if (err) {
                 console.log(err);
