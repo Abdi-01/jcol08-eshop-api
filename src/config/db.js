@@ -1,16 +1,19 @@
 const mysql = require('mysql');
+const util = require('util');
 
 const dbConf = mysql.createPool({
     host: 'localhost',
-    user: 'AL',
-    password: '007@001',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
     database: 'eshop'
 })
+
+const dbQuery = util.promisify(dbConf.query).bind(dbConf);
 
 // Sequelze configuration
 const { Sequelize } = require('sequelize');
 
-const dbSequelize = new Sequelize("eshop", "AL", "007@001", {
+const dbSequelize = new Sequelize("eshop",process.env.DB_USER, process.env.DB_PASSWORD, {
     host: 'localhost',
     dialect: 'mysql'
 })
@@ -26,5 +29,5 @@ const checkSequelize = async () => {
 }
 
 module.exports = {
-    dbConf, dbSequelize, checkSequelize
+    dbConf, dbSequelize, checkSequelize, dbQuery
 }

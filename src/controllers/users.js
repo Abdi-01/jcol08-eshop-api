@@ -1,4 +1,4 @@
-const { dbConf } = require("../config/db");
+const { dbConf, dbQuery } = require("../config/db");
 const { hashPassword, createToken } = require("../config/encript");
 const UsersModel = require("../model/users");
 const bcrypt = require('bcrypt');
@@ -30,18 +30,15 @@ module.exports = {
         //     return res.status(200).send(results);
         // })
     },
-    regis: (req, res) => {
-        let { username, email, password } = req.body;
-        // 0. Hashing password dahulu
-        const newPass = hashPassword(password);
-        console.log(newPass);
-        // 1. GET data untuk memeriksa, apakah email dan/atau username, sudah pernah digunakan
-        dbConf.query(`SELECT * FROM USERS
-        WHERE email=${dbConf.escape(email)} OR username=${dbConf.escape(username)};`, (err, results) => {
-            if (err) {
-                console.log(err);
-                return res.status(500).send(err);
-            }
+    regis: async (req, res) => {
+        try {
+            let { username, email, password } = req.body;
+            // 0. Hashing password dahulu
+            const newPass = hashPassword(password);
+            console.log(newPass);
+            // 1. GET data untuk memeriksa, apakah email dan/atau username, sudah pernah digunakan
+            let results = await dbQuery(`SELECT * FROM USERS
+            WHERE email=${dbConf.escape(email)} OR username=${dbConf.escape(username)};`);
             if (results.length > 0) {
                 // 2. Jika ada value yang didapatkan, maka kirim response untuk regis ulang
                 return res.status(200).send({
@@ -50,40 +47,34 @@ module.exports = {
                 });
             } else {
                 // 3. jika tidak ada yang sama maka registrasi berlanjut
-                dbConf.query(`INSERT INTO users (username,email,password) 
-                values (${dbConf.escape(username)},${dbConf.escape(email)},${dbConf.escape(newPass)});`, (errInsert, resultInsert) => {
-                    if (errInsert) {
-                        console.log(errInsert);
-                        return res.status(500).send(errInsert);
+                let resultInsert = await dbQuery(`INSERT INTO users (username,email,password) 
+                values (${dbConf.escape(username)},${dbConf.escape(email)},${dbConf.escape(newPass)});`);
+
+                let token = createToken({ id: resultInsert.insertId, username, email });
+                transport.sendMail({
+                    from: 'ESHOP ADMIN',
+                    to: email,
+                    subject: 'Verification email account',
+                    html: `<div>
+                    <h3>Click link below for verification your email</h3>
+                    <a href="http://localhost:3000/verification?t=${token}">Verifie Now</a>
+                    </div>`
+                }, (err, info) => {
+                    if (err) {
+                        return res.status(400).send(err);
                     }
-
-                    console.log(resultInsert);
-
-                    let token = createToken({ id: resultInsert.insertId, username, email });
-
-                    // Mengirimkan email dahulu
-                    transport.sendMail({
-                        from: 'ESHOP ADMIN',
-                        to: email,
-                        subject: 'Verification email account',
-                        html: `<div>
-                        <h3>Click link below for verification your email</h3>
-                        <a href="http://localhost:3000/verification?t=${token}">Verifie Now</a>
-                        </div>`
-                    }, (err, info) => {
-                        if (err) {
-                            return res.status(400).send(err);
-                        }
-                        return res.status(201).send({
-                            success: true,
-                            message: 'Register your account success ✅, check your email',
-                            info
-                        })
+                    return res.status(201).send({
+                        success: true,
+                        message: 'Register your account success ✅, check your email',
+                        info
                     })
-
                 })
             }
-        })
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
     },
     login: (req, res) => {
         console.log(req.body);
@@ -147,7 +138,7 @@ module.exports = {
     verifiedAccount: (req, res) => {
         // Digunakan untuk merubah status akun, yang awalnya unverified menjadi verified
         console.log(req.decript);
-        dbConf.query(`UPDATE users set status="verified" where id=${dbConf.escape(req.decript.id)};`,(err,results)=>{
+        dbConf.query(`UPDATE users set status="verified" where id=${dbConf.escape(req.decript.id)};`, (err, results) => {
             if (err) {
                 return res.status(500).send({
                     success: false,

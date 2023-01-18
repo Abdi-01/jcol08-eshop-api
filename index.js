@@ -1,5 +1,7 @@
+const dotenv=require('dotenv');
+dotenv.config();
 const express = require('express');
-const PORT = 2600;
+const PORT = process.env.PORT;
 const app = express();
 const cors = require('cors');
 const bearerToken = require('express-bearer-token');
